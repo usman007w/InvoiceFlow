@@ -1,9 +1,13 @@
 import json
+import sys
 from decimal import Decimal
 from pathlib import Path
 
 from app.extract.baseline import parse_invoice
 from app.extract.pdf_text import read_pdf_text
+
+folder = sys.argv[1] if len(sys.argv) > 1 else "invoices"
+ext = ".png" if folder == "scanned" else ".pdf"
 
 ROOT = Path(__file__).resolve().parents[2] / "data" / "synthetic"
 truth = json.loads((ROOT / "ground_truth.json").read_text())
@@ -37,7 +41,8 @@ failures = []
 
 for row in truth:
     expected = row["invoice"]
-    got = parse_invoice(read_pdf_text(ROOT / "invoices" / row["file"]))
+    path = ROOT / folder / (Path(row["file"]).stem + ext)
+    got = parse_invoice(read_pdf_text(path))
     ok = {}
     for f in TEXT_FIELDS:
         ok[f] = got[f] == expected[f]
@@ -52,6 +57,7 @@ for row in truth:
         failures.append((row["file"], [f for f, v in ok.items() if not v]))
 
 n = len(truth)
+print(f"Folder: {folder}")
 print(f"Invoices: {n}")
 for f, c in correct.items():
     print(f"{f:16s} {c}/{n}  {100 * c / n:.1f}%")
