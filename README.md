@@ -30,7 +30,7 @@ FastAPI, PyMuPDF, Tesseract/PaddleOCR, LLM (Groq), PostgreSQL, Next.js, Docker
 ## Status
 - [x] Backend skeleton and invoice schema
 - [x] Synthetic invoice generator with injected errors and ground truth
-- [ ] Baseline extractor and evaluation
+- [x] Baseline extractor and evaluation
 - [ ] OCR for scanned invoices
 - [ ] LLM extraction
 - [ ] Reconciliation
