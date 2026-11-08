@@ -5,9 +5,12 @@ from pathlib import Path
 
 from app.extract.baseline import parse_invoice
 from app.extract.pdf_text import read_pdf_text
+from app.extract.ocr import read_image_text
 
 folder = sys.argv[1] if len(sys.argv) > 1 else "invoices"
 ext = ".png" if folder == "scanned" else ".pdf"
+use_ocr = len(sys.argv) > 2 and sys.argv[2] == "ocr"
+reader = read_image_text if use_ocr else read_pdf_text
 
 ROOT = Path(__file__).resolve().parents[2] / "data" / "synthetic"
 truth = json.loads((ROOT / "ground_truth.json").read_text())
@@ -42,7 +45,7 @@ failures = []
 for row in truth:
     expected = row["invoice"]
     path = ROOT / folder / (Path(row["file"]).stem + ext)
-    got = parse_invoice(read_pdf_text(path))
+    got = parse_invoice(reader(path))
     ok = {}
     for f in TEXT_FIELDS:
         ok[f] = got[f] == expected[f]
