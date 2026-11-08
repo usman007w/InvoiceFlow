@@ -23,6 +23,15 @@ Invoices (folder / Gmail)
         |
   Chat agent (read-only queries)
 ```
+## Results (synthetic scanned set, 65 invoices)
+
+| Stage | Line items correct |
+|---|---|
+| Regex baseline on scans | 0/65 |
+| OCR + LLM, raw | 45/65 |
+| OCR + LLM + math check and repair | 65/65 |
+
+Silent errors (wrong and not flagged): 0. Note: synthetic, clean data. Real invoices will be harder.
 
 ## Stack
 FastAPI, PyMuPDF, Tesseract/PaddleOCR, LLM (Groq), PostgreSQL, Next.js, Docker
