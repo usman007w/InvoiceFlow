@@ -35,7 +35,7 @@ FastAPI, PyMuPDF, Tesseract/PaddleOCR, LLM (Groq), PostgreSQL, Next.js, Docker
 - [x] LLM extraction (Groq) with schema validation
 - [x] Validation layer (line math check, auto-repair, review flags)
 - [x] End-to-end pipeline evaluation
-- [ ] Reconciliation (PO matching, duplicate detection)
+- [x] Reconciliation (PO matching, duplicate detection)
 - [ ] Auth, roles, audit log
 - [ ] Next.js frontend
 - [ ] Chat agent
@@ -63,3 +63,7 @@ Silent errors (wrong and not flagged): 0. Note: synthetic, clean data. Real invo
 | Silent errors (wrong and not flagged) | 0 |
 
 Note: synthetic, clean data with mild scan noise. Real invoices will be harder, and a harder test set is planned.
+## Reconciliation
+| Price mismatch vs purchase order caught | 6/6 |
+| Duplicate invoices caught | 5/5 |
+| Clean invoices falsely flagged | 0/46 |
