@@ -1,6 +1,20 @@
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 
-app = FastAPI(title="InvoiceFlow")
+from app.api.invoices import router as invoices_router
+from app.db import init_db
+
+
+@asynccontextmanager
+async def lifespan(app):
+    init_db()
+    yield
+
+
+app = FastAPI(title="InvoiceFlow", lifespan=lifespan)
+app.include_router(invoices_router)
+
 
 @app.get("/health")
 def health():

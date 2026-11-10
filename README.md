@@ -36,6 +36,7 @@ FastAPI, PyMuPDF, Tesseract/PaddleOCR, LLM (Groq), PostgreSQL, Next.js, Docker
 - [x] Validation layer (line math check, auto-repair, review flags)
 - [x] End-to-end pipeline evaluation
 - [x] Reconciliation (PO matching, duplicate detection)
+- [x] API and database (upload, list, review, approve)
 - [ ] Auth, roles, audit log
 - [ ] Next.js frontend
 - [ ] Chat agent
@@ -67,3 +68,5 @@ Note: synthetic, clean data with mild scan noise. Real invoices will be harder, 
 | Price mismatch vs purchase order caught | 6/6 |
 | Duplicate invoices caught | 5/5 |
 | Clean invoices falsely flagged | 0/46 |
+
+API tested manually: upload, duplicate detection, rejection of a fake PDF (415), list/detail, approve.

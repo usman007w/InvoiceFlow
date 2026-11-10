@@ -1,0 +1,152 @@
+import json
+import uuid
+from datetime import datetime, timezone
+
+from fastapi import APIRouter, Depends, HTTPException, UploadFile
+from pydantic import BaseModel
+from sqlalchemy import select
+from sqlalchemy.orm import Session
+
+from app.core.config import MAX_UPLOAD_BYTES, UPLOAD_DIR
+from app.db import InvoiceRecord, PurchaseOrderRecord, get_db
+from app.extract.llm import extract_invoice
+from app.extract.schemas import Invoice
+from app.pipeline import full_check, read_text
+from app.validate.reconcile import DuplicateDetector
+
+router = APIRouter(prefix="/invoices", tags=["invoices"])
+
+SIGNATURES = [
+    (b"%PDF", ".pdf"),
+    (b"\x89PNG\r\n\x1a\n", ".png"),
+    (b"\xff\xd8\xff", ".jpg"),
+]
+
+
+def detect_type(head):
+    for signature, ext in SIGNATURES:
+        if head.startswith(signature):
+            return ext
+    return None
+
+
+def build_context(db, before_id=None):
+    pos_index = {}
+    for po in db.scalars(select(PurchaseOrderRecord)):
+        pos_index[po.po_number] = json.loads(po.data_json)
+    detector = DuplicateDetector()
+    for rec in db.scalars(select(InvoiceRecord).order_by(InvoiceRecord.id)):
+        if before_id is not None and rec.id >= before_id:
+            continue
+        if rec.data_json:
+            detector.check(Invoice.model_validate_json(rec.data_json))
+    return pos_index, detector
+
+
+def to_dict(rec, detail=False):
+    data = json.loads(rec.data_json) if rec.data_json else None
+    out = {
+        "id": rec.id,
+        "original_name": rec.original_name,
+        "status": rec.status,
+        "issues": json.loads(rec.issues_json),
+        "repaired_lines": json.loads(rec.repaired_json),
+        "supplier_name": data["supplier_name"] if data else None,
+        "invoice_number": data["invoice_number"] if data else None,
+        "total": data["total"] if data else None,
+        "created_at": rec.created_at.isoformat(),
+    }
+    if detail:
+        out["data"] = data
+    return out
+
+
+@router.post("", status_code=201)
+def upload_invoice(file: UploadFile, db: Session = Depends(get_db)):
+    content = file.file.read(MAX_UPLOAD_BYTES + 1)
+    if len(content) > MAX_UPLOAD_BYTES:
+        raise HTTPException(413, "File too large (10 MB max)")
+    ext = detect_type(content[:8])
+    if ext is None:
+        raise HTTPException(415, "Only PDF, PNG and JPG files are allowed")
+
+    UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+    stored_name = f"{uuid.uuid4().hex}{ext}"
+    path = UPLOAD_DIR / stored_name
+    path.write_bytes(content)
+    original = (file.filename or "upload")[:200]
+
+    try:
+        inv = extract_invoice(read_text(path))
+    except ValueError as e:
+        path.unlink(missing_ok=True)
+        raise HTTPException(422, str(e))
+    except Exception:
+        rec = InvoiceRecord(
+            original_name=original,
+            stored_name=stored_name,
+            status="extraction_failed",
+            issues_json=json.dumps(["extraction_failed"]),
+        )
+        db.add(rec)
+        db.commit()
+        db.refresh(rec)
+        return to_dict(rec)
+
+    pos_index, detector = build_context(db)
+    result = full_check(inv, pos_index, detector)
+    rec = InvoiceRecord(
+        original_name=original,
+        stored_name=stored_name,
+        status=result["status"],
+        data_json=result["invoice"].model_dump_json(),
+        issues_json=json.dumps(result["issues"]),
+        repaired_json=json.dumps(result["repaired"]),
+    )
+    db.add(rec)
+    db.commit()
+    db.refresh(rec)
+    return to_dict(rec, detail=True)
+
+
+@router.get("")
+def list_invoices(db: Session = Depends(get_db)):
+    records = db.scalars(select(InvoiceRecord).order_by(InvoiceRecord.id.desc()))
+    return [to_dict(r) for r in records]
+
+
+@router.get("/{invoice_id}")
+def get_invoice(invoice_id: int, db: Session = Depends(get_db)):
+    rec = db.get(InvoiceRecord, invoice_id)
+    if rec is None:
+        raise HTTPException(404, "Invoice not found")
+    return to_dict(rec, detail=True)
+
+
+class InvoiceUpdate(BaseModel):
+    data: Invoice | None = None
+    approve: bool = False
+
+
+@router.patch("/{invoice_id}")
+def update_invoice(invoice_id: int, body: InvoiceUpdate, db: Session = Depends(get_db)):
+    rec = db.get(InvoiceRecord, invoice_id)
+    if rec is None:
+        raise HTTPException(404, "Invoice not found")
+    if body.data is None and not rec.data_json:
+        raise HTTPException(422, "This invoice has no extracted data. Send the corrected fields.")
+    inv = body.data or Invoice.model_validate_json(rec.data_json)
+
+    pos_index, detector = build_context(db, before_id=rec.id)
+    result = full_check(inv, pos_index, detector)
+    rec.data_json = result["invoice"].model_dump_json()
+    rec.issues_json = json.dumps(result["issues"])
+    rec.repaired_json = json.dumps(result["repaired"])
+    if body.approve:
+        rec.status = "approved"
+        rec.reviewed_at = datetime.now(timezone.utc)
+    else:
+        rec.status = result["status"]
+    db.commit()
+    db.refresh(rec)
+    return to_dict(rec, detail=True)
