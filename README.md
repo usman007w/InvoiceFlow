@@ -38,7 +38,7 @@ FastAPI, PyMuPDF, Tesseract/PaddleOCR, LLM (Groq), PostgreSQL, Next.js, Docker
 - [x] Reconciliation (PO matching, duplicate detection)
 - [x] API and database (upload, list, review, approve)
 - [x] Unit tests (11 passing)
-- [ ] CI with GitHub Actions
+- [x] CI with GitHub Actions
 - [ ] Auth, roles, audit log
 - [ ] Next.js frontend
 - [ ] Chat agent
@@ -73,4 +73,5 @@ Note: synthetic, clean data with mild scan noise. Real invoices will be harder, 
 
 API tested manually: upload, duplicate detection, rejection of a fake PDF (415), list/detail, approve.
 ## CI
-![CI](https://github.com/usman007w/InvoiceFlow/actions/workflows/ci.yml/badge.svg)
+
+[![CI](https://github.com/usman007w/InvoiceFlow/actions/workflows/ci.yml/badge.svg)](https://github.com/usman007w/InvoiceFlow/actions/workflows/ci.yml)
