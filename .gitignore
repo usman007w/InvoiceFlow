@@ -11,3 +11,4 @@ data/synthetic/scanned/*.env
 data/synthetic/llm_cache.json
 backend/uploads/
 *.db
+data/synthetic/scanned/
