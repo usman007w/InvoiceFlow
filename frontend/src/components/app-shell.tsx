@@ -9,7 +9,10 @@ import { ThemeToggle } from "@/components/theme-toggle";
 
 type Me = { id: number; email: string; role: string; company_id: number };
 
-const NAV = [{ href: "/invoices", label: "Invoices" }];
+const NAV = [
+  { href: "/invoices", label: "Invoices" },
+  { href: "/upload", label: "Upload" },
+];
 
 export function AppShell({ children }: { children: ReactNode }) {
   const router = useRouter();
