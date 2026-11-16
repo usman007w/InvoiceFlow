@@ -2,6 +2,11 @@
 
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -39,48 +44,51 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center p-6">
-      <form
-        onSubmit={onSubmit}
-        className="w-full max-w-sm space-y-4 rounded-lg border border-gray-400 p-6"
-      >
-        <h1 className="text-2xl font-semibold">InvoiceFlow</h1>
-        <p className="text-sm opacity-70">Sign in to review invoices.</p>
-
-        <label className="block text-sm">
-          Email
-          <input
-            type="email"
-            autoComplete="username"
-            required
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="mt-1 w-full rounded border border-gray-400 bg-transparent px-3 py-2"
-          />
-        </label>
-
-        <label className="block text-sm">
-          Password
-          <input
-            type="password"
-            autoComplete="current-password"
-            required
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="mt-1 w-full rounded border border-gray-400 bg-transparent px-3 py-2"
-          />
-        </label>
-
-        {error && <p className="text-sm text-red-500">{error}</p>}
-
-        <button
-          type="submit"
-          disabled={busy}
-          className="w-full rounded bg-blue-600 px-3 py-2 font-medium text-white disabled:opacity-50"
-        >
-          {busy ? "Signing in..." : "Sign in"}
-        </button>
-      </form>
+    <main className="relative flex min-h-screen items-center justify-center p-6">
+      <div className="absolute right-4 top-4">
+        <ThemeToggle />
+      </div>
+      <div className="w-full max-w-md">
+        <h1 className="mb-6 text-center text-4xl font-bold tracking-tight">
+          Invoice<span className="text-primary">Flow</span>
+        </h1>
+        <Card className="border-b-2 border-b-primary bg-card/80 shadow-lg backdrop-blur-md">
+          <CardHeader>
+            <CardTitle className="text-xl">Sign in</CardTitle>
+            <CardDescription>Review, correct and approve invoices.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={onSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  autoComplete="username"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="password">Password</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  autoComplete="current-password"
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                />
+              </div>
+              {error && <p className="text-sm text-red-500">{error}</p>}
+              <Button type="submit" disabled={busy} className="w-full font-semibold">
+                {busy ? "Signing in..." : "Sign in"}
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
+      </div>
     </main>
   );
 }
