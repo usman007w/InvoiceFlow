@@ -1,5 +1,6 @@
 import json
 import uuid
+from fastapi.responses import FileResponse
 
 from fastapi import APIRouter, Depends, HTTPException, Request, UploadFile
 from pydantic import BaseModel
@@ -79,8 +80,8 @@ def to_dict(rec, detail=False):
     }
     if detail:
         out["data"] = data
+        out["file_type"] = rec.stored_name.rsplit(".", 1)[-1].lower()
     return out
-
 
 @router.post("", status_code=201)
 def upload_invoice(
@@ -162,6 +163,29 @@ def get_invoice(
 ):
     return to_dict(get_owned(db, invoice_id, user), detail=True)
 
+MEDIA_TYPES = {".pdf": "application/pdf", ".png": "image/png", ".jpg": "image/jpeg"}
+
+
+@router.get("/{invoice_id}/file")
+def get_invoice_file(
+    invoice_id: int,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    rec = get_owned(db, invoice_id, user)
+    path = (UPLOAD_DIR / rec.stored_name).resolve()
+    media_type = MEDIA_TYPES.get(path.suffix.lower())
+    if media_type is None or path.parent != UPLOAD_DIR.resolve() or not path.is_file():
+        raise HTTPException(404, "File not found")
+    return FileResponse(
+        path,
+        media_type=media_type,
+        headers={
+            "X-Content-Type-Options": "nosniff",
+            "Content-Disposition": "inline",
+            "Cache-Control": "private, no-store",
+        },
+    )
 
 class InvoiceUpdate(BaseModel):
     data: Invoice | None = None

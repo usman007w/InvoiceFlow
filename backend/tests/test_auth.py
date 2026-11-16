@@ -96,3 +96,17 @@ def test_audit_log_is_company_scoped_and_hides_secrets():
     rows_b = admin_b.get("/audit").json()
     assert rows_b
     assert all(row["email"].endswith("@b.test") for row in rows_b)
+
+
+def test_invoice_file_requires_login_and_company(tmp_path, monkeypatch):
+    monkeypatch.setattr("app.api.invoices.UPLOAD_DIR", tmp_path)
+    (tmp_path / "secret.png").write_bytes(PNG + b"data")
+    inv = invoice_id()
+    assert TestClient(app).get(f"/invoices/{inv}/file").status_code == 401
+    other, _ = login("admin@b.test")
+    assert other.get(f"/invoices/{inv}/file").status_code == 404
+    owner, _ = login("admin@a.test")
+    r = owner.get(f"/invoices/{inv}/file")
+    assert r.status_code == 200
+    assert r.headers["content-type"] == "image/png"
+    assert r.headers["x-content-type-options"] == "nosniff"
