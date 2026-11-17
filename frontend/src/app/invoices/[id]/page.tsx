@@ -213,14 +213,7 @@ export default function ReviewPage() {
             </div>
 
             <div className="flex flex-wrap gap-2 pt-2">
-                            <Button
-                disabled={busy || inv.issues.length > 0}
-                onClick={() => save(true)}
-                className="cursor-pointer font-semibold"
-                title={inv.issues.length > 0 ? "Fix the open issues before approving" : undefined}
-              >
-                Approve
-              </Button>
+               
               <Button disabled={busy} onClick={() => save(true)} className="cursor-pointer font-semibold">
                 Approve
               </Button>

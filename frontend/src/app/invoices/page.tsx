@@ -1,5 +1,5 @@
 "use client";
-
+import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Search } from "lucide-react";
@@ -157,8 +157,13 @@ export default function InvoicesPage() {
               <TableBody>
                 {visible.map((inv) => (
                   <TableRow key={inv.id} className="transition-colors hover:bg-accent">
-                    <TableCell className="font-medium">
-                      {inv.invoice_number ?? inv.original_name}
+                                        <TableCell className="font-medium">
+                      <Link
+                        href={`/invoices/${inv.id}`}
+                        className="hover:text-primary hover:underline underline-offset-4"
+                      >
+                        {inv.invoice_number ?? inv.original_name}
+                      </Link>
                     </TableCell>
                     <TableCell>{inv.supplier_name ?? "-"}</TableCell>
                     <TableCell className="pr-8 text-right tabular-nums">
