@@ -1,3 +1,4 @@
+import json
 import jwt
 from fastapi.testclient import TestClient
 from sqlalchemy import select
@@ -110,3 +111,30 @@ def test_invoice_file_requires_login_and_company(tmp_path, monkeypatch):
     assert r.status_code == 200
     assert r.headers["content-type"] == "image/png"
     assert r.headers["x-content-type-options"] == "nosniff"
+
+def test_approval_blocked_while_issues_remain():
+    client, _ = login("admin@a.test")
+    data = {
+        "supplier_name": "Company A Supplier",
+        "invoice_number": "INV-BLOCK-1",
+        "invoice_date": "2026-01-01",
+        "currency": "USD",
+        "line_items": [
+            {"description": "Item", "quantity": "1", "unit_price": "10.00", "total": "10.00"}
+        ],
+        "subtotal": "10.00",
+        "tax": "1.00",
+        "total": "11.00",
+        "po_number": None,
+    }
+    with SessionLocal() as db:
+        rec = db.scalar(select(InvoiceRecord).where(InvoiceRecord.company_id == 1))
+        rec.data_json = json.dumps(data)
+        rec.issues_json = '["duplicate"]'
+        rec.status = "needs_review"
+        db.commit()
+        target = rec.id
+    r = client.patch(f"/invoices/{target}", json={"approve": True})
+    assert r.status_code == 409
+    with SessionLocal() as db:
+        assert db.get(InvoiceRecord, target).status != "approved"

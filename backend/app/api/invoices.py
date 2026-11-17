@@ -211,6 +211,12 @@ def update_invoice(
     rec.issues_json = json.dumps(result["issues"])
     rec.repaired_json = json.dumps(result["repaired"])
     if body.approve:
+        if result["issues"]:
+            db.rollback()
+            raise HTTPException(
+                409,
+                "This invoice still has open issues. Fix them before approving.",
+            )
         rec.status = "approved"
         rec.reviewed_at = utcnow()
     else:

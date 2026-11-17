@@ -58,8 +58,9 @@ export default function ReviewPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ data: draft, approve }),
       });
-      if (!res.ok) {
-        toast.error("Could not save. Check the fields and try again.");
+          if (!res.ok) {
+        const data = await res.json().catch(() => null);
+        toast.error(typeof data?.detail === "string" ? data.detail : "Could not save. Try again.");
         return;
       }
       const updated: Detail = await res.json();
@@ -212,8 +213,13 @@ export default function ReviewPage() {
             </div>
 
             <div className="flex flex-wrap gap-2 pt-2">
-              <Button variant="outline" disabled={busy} onClick={() => save(false)} className="cursor-pointer">
-                Save changes
+                            <Button
+                disabled={busy || inv.issues.length > 0}
+                onClick={() => save(true)}
+                className="cursor-pointer font-semibold"
+                title={inv.issues.length > 0 ? "Fix the open issues before approving" : undefined}
+              >
+                Approve
               </Button>
               <Button disabled={busy} onClick={() => save(true)} className="cursor-pointer font-semibold">
                 Approve
