@@ -102,7 +102,35 @@ export default function ReviewPage() {
       </AppShell>
     );
   }
-
+  if (inv.status === "extraction_failed" || !draft) {
+    return (
+      <AppShell>
+        <div className="space-y-6">
+          <Link href="/invoices" className="text-sm text-muted-foreground hover:text-primary">
+            ← Back to invoices
+          </Link>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <h1 className="text-3xl font-bold tracking-tight">{inv.original_name}</h1>
+            <StatusBadge status={inv.status} />
+          </div>
+          <div className="rounded-md border border-red-500/40 bg-red-500/10 p-4">
+            <p className="font-semibold">This document could not be read.</p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Upload a clearer copy, or ask the supplier for a new invoice. There is nothing to approve here.
+            </p>
+          </div>
+          <div className="overflow-hidden rounded-md border bg-card/80 backdrop-blur-md">
+            {inv.file_type === "pdf" ? (
+              <iframe src={`/api/invoices/${id}/file`} title="Invoice" className="h-[70vh] w-full" />
+            ) : (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={`/api/invoices/${id}/file`} alt="Invoice" className="h-auto w-full" />
+            )}
+          </div>
+        </div>
+      </AppShell>
+    );
+  }
   const repaired = new Set(inv.repaired_lines);
   const hasIssueText = inv.issues.some((i) => i.startsWith("line_math"));
 
