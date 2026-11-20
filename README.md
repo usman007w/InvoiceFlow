@@ -40,7 +40,7 @@ FastAPI, PyMuPDF, Tesseract/PaddleOCR, LLM (Groq), PostgreSQL, Next.js, Docker
 - [x] Unit tests (11 passing)
 - [x] CI with GitHub Actions
 - [x] Auth, roles, audit log (argon2, httpOnly cookie, company isolation, 9 attack tests in CI)
-- [ ] Next.js frontend
+- [x] Next.js frontend
 - [ ] Chat agent
 - [ ] Docker and deployment
 
