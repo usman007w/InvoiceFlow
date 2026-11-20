@@ -1,0 +1,35 @@
+services:
+  backend:
+    build: ./backend
+    env_file: ./backend/.env
+    environment:
+      DATABASE_URL: sqlite:////data/invoiceflow.db
+    volumes:
+      - app-data:/data
+      - uploads:/app/uploads
+    restart: unless-stopped
+
+  frontend:
+    build: ./frontend
+    environment:
+      BACKEND_URL: http://backend:8000
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+  caddy:
+    image: caddy:2
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+    depends_on:
+      - frontend
+    restart: unless-stopped
+
+volumes:
+  app-data:
+  uploads:
+  caddy-data:

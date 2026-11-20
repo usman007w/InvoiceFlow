@@ -10,7 +10,7 @@ if len(sys.argv) != 2:
     print('Usage: python -m scripts.load_pos "Company Name"')
     sys.exit(1)
 
-ROOT = Path(__file__).resolve().parents[2] / "data" / "synthetic"
+ROOT = Path(__file__).resolve().parents[1] / "seed"
 init_db()
 pos = json.loads((ROOT / "purchase_orders.json").read_text())
 
