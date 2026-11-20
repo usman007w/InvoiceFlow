@@ -73,6 +73,8 @@ Python, FastAPI, SQLAlchemy, SQLite, Pydantic, Tesseract OCR, Groq LLM API, Next
 
 ## Run it with Docker
 
+![Docker Compose images: backend, frontend and Caddy](docs/screenshots/docker.png)
+
 Requirements: Docker Desktop and a free Groq API key.
 
 ```bash
